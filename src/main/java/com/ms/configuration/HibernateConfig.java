@@ -1,9 +1,10 @@
 package com.ms.configuration;
 
-import com.ms.model.TestTable;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
@@ -13,6 +14,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.Properties;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+
+
 /**
  * Created by mshemet on 1/11/2016.
  */
@@ -20,13 +24,21 @@ import java.util.Properties;
 @EnableTransactionManagement
 public class HibernateConfig {
 
-    @Bean(name = "dataSource")
+    @Value("${db.url}")
+    private String url;
+
+    @Value("${db.user}")
+    private String user;
+
+    @Value("${db.password}")
+    private String password;
+
+    @Bean
     public DataSource getDataSource() {
         BasicDataSource dataSource = new BasicDataSource();
-     //   dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        dataSource.setUrl("jdbc:mysql://localhost:3306/ms_blog?createDatabaseIfNotExist=true");
-        dataSource.setUsername("root");
-        dataSource.setPassword("password");
+        dataSource.setUrl(defaultIfBlank(url, "jdbc:mysql://localhost:3306/ms_blog?createDatabaseIfNotExist=true&serverTimezone=UTC"));
+        dataSource.setUsername(defaultIfBlank(user, "root"));
+        dataSource.setPassword(defaultIfBlank(password, "password"));
         return dataSource;
     }
 
@@ -34,8 +46,8 @@ public class HibernateConfig {
         Properties properties = new Properties();
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5InnoDBDialect");
-        properties.put("hibernate.hbm2ddl.import_files_sql_extractor", "org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor");
-        properties.put("hibernate.hbm2ddl.auto", "create");
+        //properties.put("hibernate.hbm2ddl.import_files_sql_extractor", "org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor");
+        properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
     }
 
@@ -44,8 +56,7 @@ public class HibernateConfig {
     public SessionFactory getSessionFactory(DataSource dataSource) {
         LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
         sessionBuilder.addProperties(getHibernateProperties());
-        sessionBuilder.addAnnotatedClasses(TestTable.class);
-        //sessionBuilder.
+        sessionBuilder.scanPackages("com.ms.entity");
         return sessionBuilder.buildSessionFactory();
     }
 
@@ -53,9 +64,6 @@ public class HibernateConfig {
     @Bean
     public HibernateTransactionManager getTransactionManager(
             SessionFactory sessionFactory) {
-        HibernateTransactionManager transactionManager = new HibernateTransactionManager(
-                sessionFactory);
-
-        return transactionManager;
+        return new HibernateTransactionManager(sessionFactory);
     }
 }
