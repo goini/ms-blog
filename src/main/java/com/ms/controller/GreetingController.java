@@ -1,8 +1,9 @@
-package com.ms;
+package com.ms.controller;
 
 import com.ms.model.Greeting;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,5 +31,10 @@ public class GreetingController {
     public Greeting greeting(@RequestParam(value="name", defaultValue="World") String name) {
         return greeting.t(counter.incrementAndGet(),
                 String.format(template, name));
+    }
+
+    @RequestMapping("/greeting/{book}/{page}/dfgfd")
+    public Integer greeting(@PathVariable(value="id") Integer i) {
+        return i++;
     }
 }

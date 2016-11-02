@@ -1,5 +1,7 @@
 package com.ms.configuration;
 
+import com.ms.entities.Author;
+import com.ms.entities.Cat;
 import com.ms.model.TestTable;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.SessionFactory;
@@ -24,7 +26,7 @@ public class HibernateConfig {
     public DataSource getDataSource() {
         BasicDataSource dataSource = new BasicDataSource();
      //   dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-        dataSource.setUrl("jdbc:mysql://localhost:3306/ms_blog?createDatabaseIfNotExist=true");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/ms_blog?createDatabaseIfNotExist=true&serverTimezone=UTC");
         dataSource.setUsername("root");
         dataSource.setPassword("password");
         return dataSource;
@@ -35,7 +37,7 @@ public class HibernateConfig {
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5InnoDBDialect");
         properties.put("hibernate.hbm2ddl.import_files_sql_extractor", "org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor");
-        properties.put("hibernate.hbm2ddl.auto", "create");
+        properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
     }
 
@@ -44,7 +46,11 @@ public class HibernateConfig {
     public SessionFactory getSessionFactory(DataSource dataSource) {
         LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
         sessionBuilder.addProperties(getHibernateProperties());
-        sessionBuilder.addAnnotatedClasses(TestTable.class);
+        sessionBuilder.addAnnotatedClasses(
+                Cat.class,
+                TestTable.class,
+                Author.class
+        );
         //sessionBuilder.
         return sessionBuilder.buildSessionFactory();
     }
