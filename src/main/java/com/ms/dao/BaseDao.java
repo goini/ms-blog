@@ -2,16 +2,12 @@ package com.ms.dao;
 
 import com.ms.dto.EntityErrorMessage;
 import com.ms.entity.BaseEntity;
-import com.ms.exception.EntityNotFoundException;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import com.ms.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.persistence.criteria.CriteriaQuery;
 import java.lang.reflect.ParameterizedType;
 import java.sql.Timestamp;
@@ -23,14 +19,14 @@ import java.util.Optional;
  * Created by max shemet on 11/2/2016.
  */
 @Repository
-@Transactional
+@Transactional(propagation = Propagation.REQUIRED)
 public abstract class BaseDao<T extends BaseEntity> {
 
-    private SessionFactory factory;
     private Class<T> entityClass;
 
     private EntityManager entityManager;
-
+    @PersistenceUnit
+    private EntityManagerFactory emf;
     @PersistenceContext
     public void setEntityManager(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -50,26 +46,31 @@ public abstract class BaseDao<T extends BaseEntity> {
     public T get(long id) {
         return Optional.ofNullable(entityManager
                 .find(entityClass, id))
-                .orElseThrow(() -> new EntityNotFoundException(new EntityErrorMessage(id, entityClass)));
+                .orElseThrow(() -> new ResourceNotFoundException(new EntityErrorMessage(id, entityClass)));
     }
 
     public void update(T obj) {
-        obj = get(obj.getId());
-        obj.setUpdated(Timestamp.valueOf(LocalDateTime.now()));
-        entityManager.merge(obj);
+   //     entityManager.getTransaction().commit();
+        //entityManager.lock(obj, LockModeType.NONE);
+//        entityManager.refresh(get(obj.getId()));
+       // entityManager.detach(obj);
+        obj.setUpdated( Timestamp.valueOf(LocalDateTime.now()));
+       entityManager.merge(obj);
     }
 
     public T create(T obj) {
-        LocalDateTime now = LocalDateTime.now();
-        obj.setCreated(Timestamp.valueOf(now));
-        obj.setUpdated(Timestamp.valueOf(now));
         entityManager.persist(obj);
+        entityManager.refresh(obj);
         return obj;
     }
 
     public void delete(long id) {
-        T obj = entityManager.getReference(entityClass, id);
-        entityManager.remove(id);
+        try {
+            T obj = getReference(id);
+            entityManager.remove(obj);
+        } catch (EntityNotFoundException e) {
+            throw new ResourceNotFoundException(new EntityErrorMessage(id, entityClass));
+        }
     }
 
     public List<T> find(CriteriaQuery<T> criteriaQuery) {
@@ -77,12 +78,12 @@ public abstract class BaseDao<T extends BaseEntity> {
         return query.getResultList();
     }
 
-    protected Criteria createCriteria(Class<T> aClass) {
-        return getSession().createCriteria(aClass);
-    }
-
-    protected Session getSession() {
-        return factory.getCurrentSession();
+    protected T getReference(long id) {
+        try {
+            return entityManager.getReference(entityClass, id);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     protected CriteriaQuery<T> createQuery() {
