@@ -24,12 +24,11 @@ public abstract class BaseDao<T extends BaseEntity> {
 
     private Class<T> entityClass;
 
-    private EntityManager entityManager;
-    @PersistenceUnit
     private EntityManagerFactory emf;
-    @PersistenceContext
-    public void setEntityManager(EntityManager entityManager) {
-        this.entityManager = entityManager;
+
+    @PersistenceUnit
+    public void setEntityManager(EntityManagerFactory emf) {
+        this.emf = emf;
     }
 
     public BaseDao() {
@@ -37,56 +36,62 @@ public abstract class BaseDao<T extends BaseEntity> {
                 .getActualTypeArguments()[0];
     }
 
+    @Transactional(propagation = Propagation.SUPPORTS)
     public List<T> getAll() {
         CriteriaQuery<T> criteriaQuery = createQuery();
         criteriaQuery.from(entityClass);
         return find(criteriaQuery);
     }
 
+    @Transactional(propagation = Propagation.SUPPORTS)
     public T get(long id) {
-        return Optional.ofNullable(entityManager
+        return Optional.ofNullable(createEntityManager()
                 .find(entityClass, id))
                 .orElseThrow(() -> new ResourceNotFoundException(new EntityErrorMessage(id, entityClass)));
     }
 
     public void update(T obj) {
-   //     entityManager.getTransaction().commit();
-        //entityManager.lock(obj, LockModeType.NONE);
-//        entityManager.refresh(get(obj.getId()));
-       // entityManager.detach(obj);
-        obj.setUpdated( Timestamp.valueOf(LocalDateTime.now()));
-       entityManager.merge(obj);
+        try {
+            EntityManager em = createEntityManager();
+            em.getReference(entityClass, obj.getId()).getId();
+            obj.setUpdated(Timestamp.valueOf(LocalDateTime.now()));
+            em.merge(obj);
+        } catch (EntityNotFoundException e) {
+            throw new ResourceNotFoundException(new EntityErrorMessage(obj.getId(), entityClass));
+        }
     }
 
     public T create(T obj) {
-        entityManager.persist(obj);
-        entityManager.refresh(obj);
+        EntityManager em = createEntityManager();
+        em.persist(obj);
+        em.refresh(obj);
         return obj;
     }
 
     public void delete(long id) {
         try {
-            T obj = getReference(id);
-            entityManager.remove(obj);
+            EntityManager em = createEntityManager();
+            T obj = em.getReference(entityClass, id);
+            em.remove(obj);
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException(new EntityErrorMessage(id, entityClass));
         }
     }
 
     public List<T> find(CriteriaQuery<T> criteriaQuery) {
-        TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+        TypedQuery<T> query = createEntityManager().createQuery(criteriaQuery);
         return query.getResultList();
     }
 
     protected T getReference(long id) {
-        try {
-            return entityManager.getReference(entityClass, id);
-        } catch (Exception e) {
-            throw e;
-        }
+        return createEntityManager().getReference(entityClass, id);
     }
 
     protected CriteriaQuery<T> createQuery() {
-        return entityManager.getCriteriaBuilder().createQuery(entityClass);
+        return createEntityManager().getCriteriaBuilder().createQuery(entityClass);
+    }
+
+    protected EntityManager createEntityManager() {
+        return emf.createEntityManager(SynchronizationType.SYNCHRONIZED);
     }
 }

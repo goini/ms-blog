@@ -24,5 +24,4 @@ public class BaseEntityListener {
         final Timestamp timestamp = Timestamp.valueOf(LocalDateTime.now());
         obj.setUpdated(timestamp);
     }
-
 }

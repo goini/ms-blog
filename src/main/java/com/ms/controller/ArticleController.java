@@ -15,7 +15,7 @@ import java.util.List;
  * Created by max shemet on 11/2/2016.
  */
 @RestController
-@RequestMapping("/article")
+@RequestMapping("/api/article")
 public class ArticleController {
 
     private ArticleDao dao;
@@ -25,7 +25,7 @@ public class ArticleController {
         this.dao = dao;
     }
 
-    @RequestMapping("/")
+    @RequestMapping({"", "/"})
     public List<Article> getAll() {
         return dao.getAll();
     }

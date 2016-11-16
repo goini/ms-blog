@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -37,8 +38,7 @@ public class HibernateConfig {
 
     @Bean
     public DataSource getDataSource() {
-        BasicDataSource dataSource = new BasicDataSource();
-//        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setUrl(defaultIfBlank(url, "jdbc:mysql://localhost:3306/ms_blog?createDatabaseIfNotExist=true&serverTimezone=UTC"));
         dataSource.setUsername(defaultIfBlank(user, "root"));
         dataSource.setPassword(defaultIfBlank(password, "password"));
@@ -75,7 +75,7 @@ public class HibernateConfig {
     @Bean
     public JpaTransactionManager getTransactionManager(
             LocalContainerEntityManagerFactoryBean managerFactoryBean) {
-        return new JpaTransactionManager(managerFactoryBean.getObject()).;
+        return new JpaTransactionManager(managerFactoryBean.getObject());
     }
 
     @Autowired
