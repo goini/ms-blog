@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Created by mshemet on 31/10/2016.
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @SpringBootApplication
 @ComponentScan
+@EnableTransactionManagement
 @EnableAutoConfiguration(exclude = HibernateJpaAutoConfiguration.class)
 public class Main {
 

@@ -24,5 +24,8 @@ public class BaseEntityListener {
         final Timestamp timestamp = Timestamp.valueOf(LocalDateTime.now());
         obj.setUpdated(timestamp);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/maksymshemet/master
 }

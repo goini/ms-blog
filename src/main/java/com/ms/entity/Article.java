@@ -18,6 +18,13 @@ public class Article extends BaseEntity {
     @Column(name = "title", nullable = false, columnDefinition = "varchar(255) default ''")
     private String title;
 
+<<<<<<< HEAD
+=======
+    @NotBlank(message = "content could not be empty")
+    @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
+    private String content;
+
+>>>>>>> refs/remotes/maksymshemet/master
     public String getTitle() {
         return title;
     }
@@ -25,4 +32,13 @@ public class Article extends BaseEntity {
         this.title = title;
     }
 
+<<<<<<< HEAD
+=======
+    public String getContent() {
+        return content;
+    }
+    public void setContent(String content) {
+        this.content = content;
+    }
+>>>>>>> refs/remotes/maksymshemet/master
 }
